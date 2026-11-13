@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ github.ref_name }}
+      OWNER: ${{ github.repository_owner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.17.3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish controller image
+        uses: docker/build-push-action@v6
+        with:
+          context: src/watchdogs/controller
+          push: true
+          tags: |
+            ghcr.io/${{ env.OWNER }}/vault-watchdogs/controller:${{ env.VERSION }}
+            ghcr.io/${{ env.OWNER }}/vault-watchdogs/controller:latest
+      - name: Set chart version
+        run: |
+          sed -i "s/^version:.*/version: ${VERSION#v}/" charts/vault-watchdogs/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: \"${VERSION#v}\"/" charts/vault-watchdogs/Chart.yaml
+          sed -i "s#tag: .*#tag: ${VERSION}#" charts/vault-watchdogs/values.yaml
+      - name: Package chart and render manifest
+        run: |
+          mkdir -p dist
+          helm lint charts/vault-watchdogs
+          helm package charts/vault-watchdogs --destination dist
+          helm template vault-watchdogs charts/vault-watchdogs -n vault-watchdogs > dist/install.yaml
+          sha256sum dist/* > dist/SHA256SUMS
+      - name: Publish chart to GHCR OCI
+        run: helm push dist/vault-watchdogs-*.tgz oci://ghcr.io/${OWNER}/vault-watchdogs
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/install.yaml
+            dist/SHA256SUMS
+            dist/vault-watchdogs-*.tgz
+      - name: Publish classic Helm repository for helm repo add
+        uses: helm/chart-releaser-action@v1.7.0
+        env:
+          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          charts_dir: charts

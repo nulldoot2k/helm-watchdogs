@@ -1,6 +1,6 @@
 image:
-  repository: vault-watchdogs
-  tag: dev
+  repository: ghcr.io/nulldoot2k/vault-watchdogs/controller
+  tag: 0.1.0
   pullPolicy: IfNotPresent
 vault:
   namespace: vault
@@ -8,7 +8,7 @@ vault:
 watchdog:
   replicas: 2
   intervalSeconds: 10
-  autoUnseal: true
+  autoUnseal: false
   allowPodDelete: false
   maxRemediationsPerHour: 3
-  secretName: vault-watchdogs-credentials
+  secretName: ""

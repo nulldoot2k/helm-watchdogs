@@ -102,9 +102,11 @@ spec:
           value: {{ .Values.watchdog.allowPodDelete | quote }}
         - name: MAX_REMEDIATIONS_PER_HOUR
           value: {{ .Values.watchdog.maxRemediationsPerHour | quote }}
+        {{- if .Values.watchdog.secretName }}
         envFrom:
         - secretRef:
             name: {{ .Values.watchdog.secretName }}
+        {{- end }}
         resources:
           requests:
             cpu: 10m

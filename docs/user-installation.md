@@ -4,11 +4,25 @@ This document is for users installing the released `vault-watchdogs` product.
 
 ## Helm installation
 
-For a released chart stored in an OCI registry:
+For the public Helm repository:
+
+```bash
+helm repo add vault-watchdogs \
+  https://nulldoot2k.github.io/helm-watchdogs
+helm repo update
+
+helm install watchdogs \
+  vault-watchdogs/vault-watchdogs \
+  --version 0.1.0 \
+  --namespace watchdogs \
+  --create-namespace
+```
+
+The same chart is also published as an OCI artifact:
 
 ```bash
 helm install watchdogs \
-  oci://ghcr.io/nulldoot2k/vault-watchdogs/watchdogs \
+  oci://ghcr.io/nulldoot2k/vault-watchdogs/vault-watchdogs \
   --version 0.1.0 \
   --namespace watchdogs \
   --create-namespace
@@ -18,7 +32,7 @@ Use a values file only for deployment-specific settings:
 
 ```bash
 helm install watchdogs \
-  oci://ghcr.io/nulldoot2k/vault-watchdogs/watchdogs \
+  vault-watchdogs/vault-watchdogs \
   --version 0.1.0 \
   --namespace watchdogs \
   --create-namespace \
@@ -55,7 +69,7 @@ helm install watchdogs ./charts/vault-watchdogs \
 
 ```bash
 helm upgrade watchdogs \
-  oci://ghcr.io/nulldoot2k/vault-watchdogs/watchdogs \
+  vault-watchdogs/vault-watchdogs \
   --version 0.2.0 \
   --namespace watchdogs
 
