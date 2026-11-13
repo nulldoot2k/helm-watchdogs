@@ -43,34 +43,18 @@ Read the design before extending the controller:
 - `docs/security-threat-model.md`
 - `docs/roadmap.md`
 
-## Start the lab
+## Install for users
 
-The lab script creates the Kind cluster and installs the baseline addons by default:
-
-- local-path provisioner for PVCs
-- metrics-server
-- ingress-nginx with host ports 80 and 443
-- fake lab hostnames in `/etc/hosts`
-
-The lab uses a dedicated kubeconfig at `.local/vault-watchdogs-lab.kubeconfig` and does not switch or modify the current context in the main kubeconfig.
-
-Run:
-
-```bash
-./cluster/setup-lab.sh
-```
-
-Default hostnames are `vault-backup.test`, `vault-transit.test`, and `watchdogs.test`. Override them with `LAB_HOSTS` when needed.
+The supported user installation paths are Helm and a rendered Kubernetes
+manifest. See [docs/user-installation.md](docs/user-installation.md).
 
 ## Project layout
 
 ```text
-cluster/       Kind cluster configuration and lab scripts
-infra/         Local infrastructure addons
-vault/         Vault installation and test configuration
-src/watchdogs/  All Watchdogs product source code
-charts/        Helm charts
-deploy/        Raw Kubernetes manifests
-tests/         Failure scenarios and validation tests
-docs/          Architecture and recovery runbooks
+src/watchdogs/ All Watchdogs product source code
+charts/        Helm chart
+docs/          Product, architecture, and user documentation
 ```
+
+Kind lab setup, Vault bootstrap, failure injection, and local-only test files
+are maintained outside this public product repository.

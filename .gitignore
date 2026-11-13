@@ -6,6 +6,12 @@
 __pycache__/
 *.pyc
 
+# Local-only lab and failure-injection workspace
+cluster/
+deploy/
+tests/
+vault/
+
 # Local lab state
 .local/
 tmp/
