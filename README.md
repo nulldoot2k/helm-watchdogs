@@ -1,60 +1,89 @@
 # Vault Watchdogs
 
-Independent project for testing Vault monitoring, auto-unseal orchestration, Raft recovery, and safe remediation in a local Kind cluster.
+Vault Watchdogs is an independent key, seal, monitoring, and intelligent
+recovery platform for HashiCorp Vault.
 
-## Initial lab plan
+It works like a smart operations guardian: it watches Vault continuously,
+understands the context of an incident, chooses the smallest safe action,
+verifies recovery, and records what happened.
 
-1. Create a Kind cluster with one control-plane node and three workers.
-2. Install the required infrastructure addons.
-3. Install Vault with Raft storage.
-4. Install Vault Watchdogs using Helm or Kubernetes manifests.
-5. Run controlled failure scenarios and record the recovery result.
+## What it provides
 
-The first implementation should default to observe-only mode. Destructive actions such as peer removal and PVC deletion must require an explicit policy.
+- Native key and seal management
+- Cryptographic operations and key lifecycle management
+- Vault, Raft, pod, node, and PVC monitoring
+- Automatic incident correlation
+- Safe auto-unseal and recovery workflows
+- Quorum protection and data-safety checks
+- Policy-driven remediation
+- Audit history, API, and optional UI
+- Helm and Kubernetes manifest installation
 
-## Architecture contract
+Watchdogs is designed to be lightweight, explainable, and careful around
+running services and persistent data.
 
-The project is designed as an independent Vault service manager and native key
-management system. It does not require Transit, KMS, HSM, or Kubernetes Secret
-for its production design. Watchdogs has one runtime mode: Vault uses
-Watchdogs as its own seal and key service. Shamir or Transit are migration
-inputs only, never runtime dependencies.
+## Watchdogs compared with KMS and Transit
 
-The main differentiator is intelligent, lightweight operations: Watchdogs
-correlates Vault and Kubernetes signals, chooses the smallest safe recovery
-action, verifies the result, and stops. It is designed to reduce human toil
-without introducing unnecessary restarts, PVC changes, polling load, or service
-disruption.
+| Capability | AWS KMS | Vault Transit | Vault Watchdogs |
+| --- | --- | --- | --- |
+| Key management | Yes | Yes | Yes |
+| Cryptographic operations | Yes | Yes | Yes |
+| Vault seal support | External service | Transit seal | Native Watchdogs seal |
+| Vault monitoring | No | No | Yes |
+| Raft and PVC awareness | No | No | Yes |
+| Incident correlation | No | No | Yes |
+| Automatic safe recovery | No | No | Yes |
+| Policy-based remediation | Limited | Limited | Core capability |
+| Data-safety verification | No | No | Core capability |
 
-Watchdogs is the author's independent infrastructure product: a native key and
-seal platform with a Datadog-like operational experience for Vault. It patrols
-Vault health, understands incidents, and responds through a safe, explainable
-control loop.
+KMS and Transit focus on cryptographic services. Watchdogs combines that role
+with continuous Vault operations and intelligent recovery. Watchdogs is
+standalone and does not require AWS KMS, Transit, or HSM.
 
-See `docs/product-vision.md` for the product charter.
-See `docs/installation-experience.md` for the client installation contract.
+## Install with Helm
 
-Read the design before extending the controller:
+```bash
+helm repo add vault-watchdogs \
+  https://nulldoot2k.github.io/helm-watchdogs
+helm repo update
 
-- `docs/architecture.md`
-- `docs/key-management.md`
-- `docs/recovery-state-machine.md`
-- `docs/data-model.md`
-- `docs/security-threat-model.md`
-- `docs/roadmap.md`
-
-## Install for users
-
-The supported user installation paths are Helm and a rendered Kubernetes
-manifest. See [docs/user-installation.md](docs/user-installation.md).
-
-## Project layout
-
-```text
-src/watchdogs/ All Watchdogs product source code
-charts/        Helm chart
-docs/          Product, architecture, and user documentation
+helm install vault-watchdogs \
+  vault-watchdogs/vault-watchdogs \
+  --namespace vault-watchdogs \
+  --create-namespace
 ```
 
-Kind lab setup, Vault bootstrap, failure injection, and local-only test files
-are maintained outside this public product repository.
+## Install with a Kubernetes manifest
+
+```bash
+kubectl apply -f \
+  https://github.com/nulldoot2k/helm-watchdogs/releases/latest/download/install.yaml
+```
+
+## Upgrade
+
+```bash
+helm repo update
+helm upgrade vault-watchdogs \
+  vault-watchdogs/vault-watchdogs \
+  --namespace vault-watchdogs
+```
+
+## Uninstall
+
+```bash
+helm uninstall vault-watchdogs \
+  --namespace vault-watchdogs
+```
+
+Uninstalling Watchdogs removes Watchdogs resources only. It does not delete
+Vault data, Vault PVCs, or the Vault namespace.
+
+## Project status
+
+Vault Watchdogs is under active development. Releases will be published only
+after the key service, seal integration, recovery engine, migration workflows,
+and data-safety tests pass the release gate.
+
+For architecture, security, migration, and installation details, see the
+[documentation](docs/).
