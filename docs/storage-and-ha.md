@@ -24,16 +24,18 @@ installation contract.
 
 ### Single-cluster deployment
 
-Use PostgreSQL for durable Watchdogs state and Kubernetes Lease for controller
-leader election. PostgreSQL should be deployed separately or provided by the
-platform. It is not embedded in the Watchdogs chart by default.
+Use the native Watchdogs Raft key-authority cluster for durable replicated key
+metadata and encrypted key records. Kubernetes Lease remains responsible only
+for controller leader election. PostgreSQL is not required.
 
 ### Community production deployment
 
-Use PostgreSQL with migrations, encryption at rest, backups, retention policy,
-and audit append-only controls. Use an external KMS or HSM for the encryption
-key that protects Watchdogs key material. Unseal shares are reconstructed only
-in memory and are erased after an operation.
+Use a three or five member Watchdogs Raft cluster with encrypted local
+snapshots, membership checks, and append-only audit controls. External backup
+jobs and backup storage are intentionally out of scope. Raft snapshots remain
+mandatory for log compaction and member recovery; they are not an external
+backup system. Guardian shares are reconstructed only in memory and erased
+after an unlock operation.
 
 ## Replica model
 
@@ -45,14 +47,14 @@ restart, peer removal, or PVC operations.
 The Lease is coordination state, not business data. Losing it must be safe:
 another replica can acquire it after the lease expires.
 
-## Key-management roadmap
+## Raft key-authority implementation order
 
-1. Lab Shamir mode: Kubernetes Secret, local testing only.
-2. Encrypted Shamir mode: ciphertext in the database, encryption key in KMS.
-3. Guardian mode: threshold approval from independent guardians or HSM-backed
-   services before unseal.
-4. Rotation and revocation: versioned key records, dual control, audit event,
-   and a recovery procedure before any key is retired.
+1. Bootstrap a three or five member Raft cluster with one PVC per member.
+2. Persist encrypted key records through the Raft log and local snapshots.
+3. Replicate membership, key versions, rotation, and audit events through Raft.
+4. Reconstruct the wrapping key in memory after quorum approval, then lock and
+   zero the in-memory buffer.
+5. Rotate and revoke keys only after a committed Raft entry and audit event.
 
-The final product should support these modes through a provider interface. The
-controller must not contain provider-specific key handling logic.
+The controller must call the native key service through an authenticated
+operation boundary. It must never contain raw key handling logic.

@@ -1,0 +1,34 @@
+diff --git a/internalshared/configutil/kms.go b/internalshared/configutil/kms.go
+index 719b31d..06daaad 100644
+--- a/internalshared/configutil/kms.go
++++ b/internalshared/configutil/kms.go
+@@ -32,6 +32,7 @@ import (
+ 	"github.com/hashicorp/vault/helper/random"
+ 	"github.com/hashicorp/vault/sdk/helper/strutil"
+ 	"github.com/hashicorp/vault/sdk/logical"
++	watchdogswrapper "github.com/hashicorp/vault/internalshared/wrappers/watchdogs"
+ )
+
+ var (
+@@ -234,6 +235,7 @@ var kmsSealAddressKeys = map[string][]string{
+ 	wrapping.WrapperTypeOciKms.String():        {"key_id", "crypto_endpoint", "management_endpoint"},
+ 	wrapping.WrapperTypePkcs11.String():        {},
+ 	wrapping.WrapperTypeTransit.String():       {"address"},
++	"watchdogs":                               {"address", "ca_file", "client_cert_file", "client_key_file"},
+ }
+
+ // normalizeKMSSealConfigAddrs takes a kms seal type, a config key, and its
+@@ -315,6 +317,14 @@ func configureWrapper(configKMS *KMS, infoKeys *[]string, info *map[string]strin
+ 	case wrapping.WrapperTypeTransit:
+ 		wrapper, kmsInfo, err = GetTransitKMSFunc(configKMS, opts...)
+
++	case wrapping.WrapperType("watchdogs"):
++		wrapper = watchdogswrapper.NewWrapper()
++		var wrapperInfo *wrapping.WrapperConfig
++		wrapperInfo, err = wrapper.SetConfig(context.Background(), append(opts, wrapping.WithConfigMap(configKMS.Config))...)
++		if wrapperInfo != nil && wrapperInfo.Metadata != nil {
++			kmsInfo = wrapperInfo.Metadata
++		}
++
+ 	case wrapping.WrapperTypePkcs11:
+ 		return nil, fmt.Errorf("KMS type 'pkcs11' requires the Vault Enterprise HSM binary")

@@ -28,7 +28,8 @@ jobs:
       - name: Build and publish controller image
         uses: docker/build-push-action@v6
         with:
-          context: src/watchdogs/controller
+          context: src/watchdogs
+          file: src/watchdogs/controller/Dockerfile
           push: true
           tags: |
             ghcr.io/${{ env.OWNER }}/helm-watchdogs/controller:${{ env.VERSION }}

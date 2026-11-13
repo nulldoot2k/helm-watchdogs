@@ -7,8 +7,10 @@ for Vault clusters. It is not a wrapper around Transit, KMS, HSM, or a
 Kubernetes Secret. The product has one canonical runtime mode: Vault uses the
 Watchdogs seal and key service.
 
-Vault remains responsible for Vault data and its Raft storage. Watchdogs owns
-operational state, recovery decisions, key lifecycle, approvals, and audit.
+Vault remains responsible for Vault data and its Raft storage. The Watchdogs
+Vault Edition adds a native `watchdogs` seal provider. Watchdogs owns the key
+service, operational state, recovery decisions, key lifecycle, approvals, and
+audit.
 
 ## Product differentiator
 
@@ -74,8 +76,9 @@ Vault seal integration, monitoring, policy, and recovery controller as one
 product. Safety levels such as observe, assist, managed, and break-glass are
 policies inside this runtime, not different seal providers or product modes.
 
-Shamir and Transit are migration sources only. They are not dependencies,
-adapters, or runtime modes of Watchdogs.
+Shamir and Transit are migration sources only. They are not runtime modes of
+Watchdogs. The canonical runtime is the Watchdogs seal provider compiled into
+the compatible Vault Watchdogs Edition.
 
 ## Intelligent control loop
 

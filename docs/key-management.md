@@ -71,9 +71,16 @@ recover a secret automatically and protect it from a total compromise.
 
 ## Vault integration
 
-Vault is configured with the Watchdogs seal integration. At startup Vault asks
-Watchdogs to unwrap the stored barrier material. The Watchdogs controller then
-handles health, quorum, failover, and policy around that key operation.
+Vault is configured with the native `seal "watchdogs"` integration in the
+compatible Vault Watchdogs Edition. At startup Vault asks the provider to
+unwrap the stored barrier material through the Watchdogs key service. The
+Watchdogs controller then handles health, quorum, failover, and policy around
+that key operation. Calling `/sys/unseal` with stored Shamir shares is only a
+migration utility and is not the runtime design.
+
+The provider is compiled into the Vault Edition binary or image. It is not
+installed as a normal Vault secrets-engine plugin, because Vault's seal
+implementation is part of the Vault core startup path.
 
 The install package must provide the compatible Vault integration artifact and
 configure it on every Vault node. This is a release blocker: calling

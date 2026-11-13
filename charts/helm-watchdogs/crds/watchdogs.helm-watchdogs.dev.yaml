@@ -1,0 +1,107 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: watchdogsclusters.watchdogs.helm-watchdogs.dev
+spec:
+  group: watchdogs.helm-watchdogs.dev
+  scope: Namespaced
+  names:
+    plural: watchdogsclusters
+    singular: watchdogscluster
+    kind: WatchdogsCluster
+    shortNames: [wdc]
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            required: [provider, target]
+            properties:
+              provider:
+                type: string
+                enum: [vault]
+              target:
+                type: object
+                required: [namespace, service]
+                properties:
+                  namespace: {type: string, minLength: 1}
+                  service: {type: string, minLength: 1}
+              policy:
+                type: object
+                properties:
+                  mode: {type: string, enum: [observe, assist, managed]}
+                  allowPodDelete: {type: boolean}
+                  allowPVCDelete: {type: boolean}
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: watchdogspolicies.watchdogs.helm-watchdogs.dev
+spec:
+  group: watchdogs.helm-watchdogs.dev
+  scope: Namespaced
+  names:
+    plural: watchdogspolicies
+    singular: watchdogspolicy
+    kind: WatchdogsPolicy
+    shortNames: [wdp]
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              mode: {type: string, enum: [observe, assist, managed]}
+              maxRemediationsPerHour: {type: integer, minimum: 0}
+              requireBackupForPVCRecovery: {type: boolean}
+              requireApprovalForDestructiveActions: {type: boolean}
+    subresources:
+      status: {}
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: watchdogsincidents.watchdogs.helm-watchdogs.dev
+spec:
+  group: watchdogs.helm-watchdogs.dev
+  scope: Namespaced
+  names:
+    plural: watchdogsincidents
+    singular: watchdogsincident
+    kind: WatchdogsIncident
+    shortNames: [wdi]
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            required: [fingerprint, severity]
+            properties:
+              fingerprint: {type: string, minLength: 1}
+              severity: {type: string, enum: [info, warning, critical]}
+              action: {type: string}
+          status:
+            type: object
+            properties:
+              phase: {type: string}
+              reason: {type: string}
+              observedAt: {type: string, format: date-time}
+    subresources:
+      status: {}

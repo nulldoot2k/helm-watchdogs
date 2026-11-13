@@ -1,3 +1,9 @@
+{{- if and .Values.keyService.enabled (not .Values.keyService.secretName) }}
+{{- fail "keyService.secretName is required when keyService.enabled=true" }}
+{{- end }}
+{{- if and .Values.keyService.enabled .Values.keyService.tls.enabled (not .Values.keyService.tls.secretName) }}
+{{- fail "keyService.tls.secretName is required when keyService.tls.enabled=true" }}
+{{- end }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -104,10 +110,24 @@ spec:
           value: {{ .Values.watchdog.maxRemediationsPerHour | quote }}
         - name: METRICS_PORT
           value: {{ .Values.metrics.port | quote }}
+        - name: API_ENABLED
+          value: {{ .Values.api.enabled | quote }}
+        - name: API_PORT
+          value: {{ .Values.api.port | quote }}
+        - name: UI_ENABLED
+          value: {{ .Values.ui.enabled | quote }}
+        - name: WATCHDOGS_API_TOKEN_FILE
+          value: /var/run/watchdogs-api/token
         {{- if .Values.watchdog.secretName }}
         envFrom:
         - secretRef:
             name: {{ .Values.watchdog.secretName }}
+        {{- end }}
+        {{- if .Values.api.secretName }}
+        volumeMounts:
+        - name: api-token
+          mountPath: /var/run/watchdogs-api
+          readOnly: true
         {{- end }}
         resources:
           requests:
@@ -120,6 +140,11 @@ spec:
         - name: metrics
           containerPort: {{ .Values.metrics.port }}
           protocol: TCP
+        {{- if .Values.api.enabled }}
+        - name: api
+          containerPort: {{ .Values.api.port }}
+          protocol: TCP
+        {{- end }}
         livenessProbe:
           httpGet:
             path: /healthz
@@ -132,6 +157,15 @@ spec:
             port: metrics
           initialDelaySeconds: 3
           periodSeconds: 5
+      {{- if .Values.api.secretName }}
+      volumes:
+      - name: api-token
+        secret:
+          secretName: {{ .Values.api.secretName }}
+          items:
+          - key: {{ .Values.api.tokenKey }}
+            path: token
+      {{- end }}
 ---
 {{- if .Values.metrics.enabled }}
 apiVersion: v1
@@ -149,4 +183,167 @@ spec:
     port: {{ .Values.metrics.port }}
     targetPort: metrics
     protocol: TCP
+{{- end }}
+---
+{{- if .Values.api.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: helm-watchdogs-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: helm-watchdogs
+spec:
+  selector:
+    app.kubernetes.io/name: helm-watchdogs
+  ports:
+  - name: api
+    port: {{ .Values.api.port }}
+    targetPort: api
+    protocol: TCP
+{{- end }}
+---
+{{- if .Values.keyService.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: helm-watchdogs-key-service
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: v1
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: helm-watchdogs-key-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: helm-watchdogs-key-service
+spec:
+  serviceName: helm-watchdogs-key-service
+  replicas: {{ .Values.keyService.replicas }}
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: helm-watchdogs-key-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: helm-watchdogs-key-service
+    spec:
+      serviceAccountName: helm-watchdogs-key-service
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: key-service
+        image: {{ .Values.keyService.image.repository }}:{{ .Values.keyService.image.tag }}
+        imagePullPolicy: {{ .Values.keyService.image.pullPolicy }}
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: KEY_SERVICE_PORT
+          value: {{ .Values.keyService.port | quote }}
+        - name: KEY_SERVICE_ADDR
+          value: "0.0.0.0:{{ .Values.keyService.port }}"
+        - name: WATCHDOGS_KEY_DB
+          value: /var/lib/watchdogs/keys.db
+        - name: WATCHDOGS_KEY_API_TOKEN_FILE
+          value: /var/run/watchdogs-key/token
+        - name: WATCHDOGS_RAFT_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: WATCHDOGS_RAFT_DIR
+          value: /var/lib/watchdogs/raft
+        - name: WATCHDOGS_RAFT_BIND
+          value: "0.0.0.0:{{ .Values.keyService.raftPort }}"
+        - name: WATCHDOGS_RAFT_ADVERTISE
+          value: "$(POD_NAME).helm-watchdogs-key-service.{{ .Release.Namespace }}.svc:{{ .Values.keyService.raftPort }}"
+        - name: WATCHDOGS_RAFT_BOOTSTRAP
+          value: {{ .Values.keyService.bootstrap | quote }}
+        - name: WATCHDOGS_RAFT_JOIN_HTTP
+          value: "http://helm-watchdogs-key-service-0.helm-watchdogs-key-service.{{ .Release.Namespace }}.svc:{{ .Values.keyService.port }}"
+        {{- if .Values.keyService.tls.enabled }}
+        - name: KEY_SERVICE_TLS_CERT_FILE
+          value: /var/run/watchdogs-tls/tls.crt
+        - name: KEY_SERVICE_TLS_KEY_FILE
+          value: /var/run/watchdogs-tls/tls.key
+        - name: KEY_SERVICE_TLS_CA_FILE
+          value: /var/run/watchdogs-tls/ca.crt
+        {{- end }}
+        ports:
+        - name: api
+          containerPort: {{ .Values.keyService.port }}
+        - name: raft
+          containerPort: {{ .Values.keyService.raftPort }}
+        volumeMounts:
+        - name: key-data
+          mountPath: /var/lib/watchdogs
+        - name: api-token
+          mountPath: /var/run/watchdogs-key
+          readOnly: true
+        {{- if .Values.keyService.tls.enabled }}
+        - name: tls
+          mountPath: /var/run/watchdogs-tls
+          readOnly: true
+        {{- end }}
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: api
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      volumes:
+      - name: api-token
+        secret:
+          secretName: {{ .Values.keyService.secretName }}
+      {{- if .Values.keyService.tls.enabled }}
+      - name: tls
+        secret:
+          secretName: {{ .Values.keyService.tls.secretName }}
+          items:
+          - key: {{ .Values.keyService.tls.caKey }}
+            path: ca.crt
+          - key: {{ .Values.keyService.tls.certKey }}
+            path: tls.crt
+          - key: {{ .Values.keyService.tls.keyKey }}
+            path: tls.key
+      {{- end }}
+  volumeClaimTemplates:
+  - metadata:
+      name: key-data
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources:
+        requests:
+          storage: {{ .Values.keyService.storage.size }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: helm-watchdogs-key-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: helm-watchdogs-key-service
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: helm-watchdogs-key-service
+  ports:
+  - name: api
+    port: {{ .Values.keyService.port }}
+    targetPort: api
+  - name: raft
+    port: {{ .Values.keyService.raftPort }}
+    targetPort: {{ .Values.keyService.raftPort }}
 {{- end }}

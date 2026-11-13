@@ -1,2 +1,1 @@
-# The MVP uses Python standard library and the curl binary. This file documents
-# that no third-party runtime dependency is required.
+# The controller and API use Python standard library only.

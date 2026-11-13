@@ -19,6 +19,9 @@ clean Kubernetes cluster:
 - Native key service and cryptographic operation API are implemented and tested.
 - Vault seal integration and Shamir migration are implemented without Transit,
   KMS, HSM, or Kubernetes Secret dependencies.
+- A compatible Vault Watchdogs Edition includes the native `watchdogs` seal
+  provider. A controller that only calls `/sys/unseal` does not satisfy this
+  requirement.
 - Key material is never stored in Kubernetes Secrets, `.env` files, logs, or
   ordinary application databases.
 - Guardian quorum, recovery lock, key rotation, audit trail, and durable
@@ -46,3 +49,32 @@ clean Kubernetes cluster:
 Until these checks pass, describe the project as development or release
 candidate software. A branch named `release/v1.0.0` is not evidence that the
 release is production-ready.
+
+## Mandatory handoff gate
+
+- Do not hand back this task while the native `watchdogs` seal is only documented, mocked, or parser-tested.
+- Handoff requires a reproducible Vault Watchdogs Edition build, a fresh Vault boot using `seal "watchdogs"`, migration of the local Kind Vault from Shamir using `vault operator unseal -migrate`, and a restart test proving `Seal Type: watchdogs` with automatic unseal.
+- Handoff must include passing source tests, Helm validation, migration evidence, and a clear list of remaining production blockers. If any gate is red, continue working and do not describe the source as complete or v1.0.0.
+- Keep the Kind test isolated to the configured local kubeconfig. Never modify any other Kubernetes cluster.
+
+## Collaboration rule
+
+- When the owner gives an implementation command, execute it directly. Keep
+  commentary short and report only completed work, test results, or blockers.
+- Do not replace implementation with a long proposal when the requested action
+  is technically safe and within the repository scope.
+- The controller must never read Vault Shamir keys or call `/sys/unseal`.
+  Vault unseal is delegated to the native Watchdogs seal provider. Shamir
+  shares are accepted only by the guarded migration ceremony and the
+  Watchdogs guardian unlock flow.
+
+Keep intermediate work local. Do not push partial commits to the remote
+branch. Before the owner reviews the result, squash the completed work into a
+clean history, run the full validation suite, and present the final diff.
+
+## Workstream rule
+
+Use `docs/implementation-plan.md` as the execution checklist. Work through
+Streams A to F in dependency order. Do not mark the project complete because a
+single stream or demo works; all streams and the clean-cluster failure matrix
+must pass first.

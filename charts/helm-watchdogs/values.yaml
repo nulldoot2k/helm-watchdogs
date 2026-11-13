@@ -15,5 +15,29 @@ watchdog:
 metrics:
   enabled: true
   port: 8080
+api:
+  enabled: true
+  port: 8081
+  secretName: ""
+  tokenKey: token
 ui:
   enabled: false
+keyService:
+  enabled: false
+  image:
+    repository: ghcr.io/nulldoot2k/helm-watchdogs/key-authority
+    tag: 0.1.0
+    pullPolicy: IfNotPresent
+  port: 8090
+  raftPort: 8300
+  replicas: 3
+  bootstrap: false
+  secretName: ""
+  tls:
+    enabled: false
+    secretName: ""
+    caKey: ca.crt
+    certKey: tls.crt
+    keyKey: tls.key
+  storage:
+    size: 1Gi

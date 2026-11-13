@@ -44,6 +44,17 @@
       },
       "required": ["enabled", "port"]
     },
+    "api": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "port": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "secretName": {"type": "string"},
+        "tokenKey": {"type": "string", "minLength": 1}
+      },
+      "required": ["enabled", "port", "secretName", "tokenKey"]
+    },
     "ui": {
       "type": "object",
       "additionalProperties": false,
@@ -51,7 +62,48 @@
         "enabled": {"type": "boolean"}
       },
       "required": ["enabled"]
+    },
+    "keyService": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "image": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "repository": {"type": "string", "minLength": 1},
+            "tag": {"type": "string", "minLength": 1},
+            "pullPolicy": {"type": "string", "enum": ["Always", "IfNotPresent", "Never"]}
+          },
+          "required": ["repository", "tag", "pullPolicy"]
+        },
+        "port": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "raftPort": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "replicas": {"type": "integer", "minimum": 3},
+        "bootstrap": {"type": "boolean"},
+        "secretName": {"type": "string"},
+        "tls": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "secretName": {"type": "string"},
+            "caKey": {"type": "string", "minLength": 1},
+            "certKey": {"type": "string", "minLength": 1},
+            "keyKey": {"type": "string", "minLength": 1}
+          },
+          "required": ["enabled", "secretName", "caKey", "certKey", "keyKey"]
+        },
+        "storage": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {"size": {"type": "string", "minLength": 1}},
+          "required": ["size"]
+        }
+      },
+      "required": ["enabled", "image", "port", "raftPort", "replicas", "bootstrap", "secretName", "tls", "storage"]
     }
   },
-  "required": ["image", "vault", "watchdog", "metrics", "ui"]
+  "required": ["image", "vault", "watchdog", "metrics", "api", "ui", "keyService"]
 }
