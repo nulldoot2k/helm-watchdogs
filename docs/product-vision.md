@@ -33,6 +33,11 @@ The product combines:
 - audit, history, and operator explanations
 - optional UI and API for community users
 
+The UI is an operations console for monitoring and safe intervention. It shows
+service health, Vault and Raft state, node and storage signals, incidents,
+policy decisions, recovery history, and audit events. It does not hold keys or
+perform recovery independently of the control plane.
+
 ## Datadog-like inspiration
 
 Datadog is a useful product inspiration for the operational experience:

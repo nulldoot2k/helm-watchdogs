@@ -28,7 +28,7 @@ must not bypass safety policy or quorum checks.
 
 ```text
                          +----------------------+
-                         |       UI / API        |
+                         |   Optional UI / API   |
                          +----------+-----------+
                                     |
               +---------------------v---------------------+
@@ -47,6 +47,12 @@ The control plane runs with at least two replicas. All replicas observe state;
 only the Lease holder executes a mutating recovery action. Losing leadership
 immediately stops the current action and another replica can continue from a
 durable checkpoint.
+
+The UI is optional at installation time and is never a second controller. It
+uses the authenticated API for health, incidents, policy, audit, and operator
+actions. Monitoring, metrics, and alert events remain available when the UI is
+disabled. Neither the UI nor the API returns raw key material, unseal shares,
+or sensitive request payloads.
 
 ## Core invariants
 

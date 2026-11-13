@@ -35,6 +35,13 @@ clean Kubernetes cluster:
   and published only after the release gate passes.
 - README, migration, security, backup, rollback, and incident runbooks are
   complete for community users.
+- The optional UI is functional when enabled: authentication, Vault health,
+  Raft and node status, seal state, incidents, remediation history, audit
+  events, policies, and safe operator actions are covered by tests.
+- Monitoring works without the UI and exposes authenticated API and metrics;
+  the UI is a client of the same API rather than a second control plane.
+- UI and monitoring must not expose raw key material, unseal shares, tokens, or
+  sensitive payloads in pages, API responses, metrics, or logs.
 
 Until these checks pass, describe the project as development or release
 candidate software. A branch named `release/v1.0.0` is not evidence that the
