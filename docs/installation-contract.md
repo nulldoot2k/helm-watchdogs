@@ -2,7 +2,7 @@
 
 ## Product promise
 
-The client installs one independent product: Vault Watchdogs. The product
+The client installs one independent product: Helm Watchdogs. The product
 contains the native key service, Watchdogs seal integration, controller,
 database schema, policy engine, audit, and recovery engine.
 
@@ -44,7 +44,7 @@ install Watchdogs
 ## Proposed custom resource
 
 ```yaml
-apiVersion: watchdogs.vault-watchdogs.io/v1alpha1
+apiVersion: watchdogs.helm-watchdogs.io/v1alpha1
 kind: WatchdogsCluster
 metadata:
   name: production

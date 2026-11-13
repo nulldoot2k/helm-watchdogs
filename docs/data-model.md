@@ -1,6 +1,6 @@
 # Operational data model
 
-Vault Watchdogs uses its own database for operational state. It does not
+Helm Watchdogs uses its own database for operational state. It does not
 replace Vault Raft storage.
 
 ## Initial tables

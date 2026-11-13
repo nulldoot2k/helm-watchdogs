@@ -3,8 +3,8 @@
 ## Distribution decision
 
 The project will eventually be released as the community product
-`vault-watchdogs`. The public name, chart name, image names, documentation, and
-release artifacts must use `vault-watchdogs` consistently.
+`helm-watchdogs`. The public name, chart name, image names, documentation, and
+release artifacts must use `helm-watchdogs` consistently.
 
 Do not push to a public registry or publish a community release yet.
 

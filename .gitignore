@@ -11,7 +11,7 @@ cluster/
 deploy/*
 !deploy/install.yaml
 tests/
-vault/
+/vault/
 
 # Local lab state
 .local/

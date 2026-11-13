@@ -12,10 +12,10 @@ product.
 For a Kubernetes Vault deployment, the normal installation is:
 
 ```bash
-helm repo add vault-watchdogs https://charts.vault-watchdogs.dev
+helm repo add helm-watchdogs https://nulldoot2k.github.io/helm-watchdogs
 helm repo update
-helm install watchdogs vault-watchdogs/watchdogs \
-  --namespace watchdogs \
+helm install helm-watchdogs helm-watchdogs/helm-watchdogs \
+  --namespace vault-watchdogs \
   --create-namespace \
   --set vault.namespace=vault
 ```
@@ -25,8 +25,8 @@ topology from the namespace. A client only overrides discovery when the Vault
 deployment is non-standard:
 
 ```bash
-helm install watchdogs vault-watchdogs/watchdogs \
-  -n watchdogs --create-namespace \
+helm install helm-watchdogs helm-watchdogs/helm-watchdogs \
+  -n vault-watchdogs --create-namespace \
   --set vault.namespace=security \
   --set vault.statefulSet=custom-vault
 ```
@@ -36,7 +36,8 @@ helm install watchdogs vault-watchdogs/watchdogs \
 The project publishes a rendered, versioned installation manifest:
 
 ```bash
-kubectl apply -f https://releases.vault-watchdogs.dev/v0.1.0/install.yaml
+kubectl apply -f \
+  https://raw.githubusercontent.com/nulldoot2k/helm-watchdogs/main/deploy/install.yaml
 ```
 
 The manifest creates only Watchdogs resources. It must not delete or mutate
@@ -47,7 +48,7 @@ Vault resources during installation.
 After installation, one command starts a guided bootstrap:
 
 ```bash
-kubectl -n watchdogs exec deploy/watchdogs -- watchdogs init
+kubectl -n vault-watchdogs exec deploy/helm-watchdogs -- watchdogs init
 ```
 
 The wizard performs preflight checks, discovers Vault, detects its current seal
@@ -85,8 +86,8 @@ This is an installation or migration input, not a public runtime mode.
 ## Upgrade and rollback
 
 ```bash
-helm upgrade watchdogs vault-watchdogs/watchdogs -n watchdogs
-helm rollback watchdogs 1 -n watchdogs
+helm upgrade helm-watchdogs helm-watchdogs/helm-watchdogs -n vault-watchdogs
+helm rollback helm-watchdogs 1 -n vault-watchdogs
 ```
 
 Database migrations are versioned and run before a controller rollout. A

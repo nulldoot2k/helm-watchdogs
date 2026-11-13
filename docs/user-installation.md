@@ -1,40 +1,40 @@
-# Installing Vault Watchdogs
+# Installing Helm Watchdogs
 
-This document is for users installing the released `vault-watchdogs` product.
+This document is for users installing the released `helm-watchdogs` product.
 
 ## Helm installation
 
 For the public Helm repository:
 
 ```bash
-helm repo add vault-watchdogs \
+helm repo add helm-watchdogs \
   https://nulldoot2k.github.io/helm-watchdogs
 helm repo update
 
-helm install watchdogs \
-  vault-watchdogs/vault-watchdogs \
+helm install helm-watchdogs \
+  helm-watchdogs/helm-watchdogs \
   --version 0.1.0 \
-  --namespace watchdogs \
+  --namespace vault-watchdogs \
   --create-namespace
 ```
 
 The same chart is also published as an OCI artifact:
 
 ```bash
-helm install watchdogs \
-  oci://ghcr.io/nulldoot2k/vault-watchdogs/vault-watchdogs \
+helm install helm-watchdogs \
+  oci://ghcr.io/nulldoot2k/helm-watchdogs/helm-watchdogs \
   --version 0.1.0 \
-  --namespace watchdogs \
+  --namespace vault-watchdogs \
   --create-namespace
 ```
 
 Use a values file only for deployment-specific settings:
 
 ```bash
-helm install watchdogs \
-  vault-watchdogs/vault-watchdogs \
+helm install helm-watchdogs \
+  helm-watchdogs/helm-watchdogs \
   --version 0.1.0 \
-  --namespace watchdogs \
+  --namespace vault-watchdogs \
   --create-namespace \
   -f watchdogs-values.yaml
 ```
@@ -59,21 +59,21 @@ PVCs, namespaces, or existing Vault configuration.
 For contributors testing a checkout:
 
 ```bash
-helm lint charts/vault-watchdogs
-helm install watchdogs ./charts/vault-watchdogs \
-  --namespace watchdogs \
+helm lint charts/helm-watchdogs
+helm install helm-watchdogs ./charts/helm-watchdogs \
+  --namespace vault-watchdogs \
   --create-namespace
 ```
 
 ## Upgrade and uninstall
 
 ```bash
-helm upgrade watchdogs \
-  vault-watchdogs/vault-watchdogs \
+helm upgrade helm-watchdogs \
+  helm-watchdogs/helm-watchdogs \
   --version 0.2.0 \
-  --namespace watchdogs
+  --namespace vault-watchdogs
 
-helm uninstall watchdogs --namespace watchdogs
+helm uninstall helm-watchdogs --namespace vault-watchdogs
 ```
 
 Uninstall removes Watchdogs resources only. Vault data and PVCs are not part of

@@ -1,8 +1,8 @@
-# Vault Watchdogs architecture
+# Helm Watchdogs architecture
 
 ## Product boundary
 
-Vault Watchdogs is an independent service-management and key-management system
+Helm Watchdogs is an independent service-management and key-management system
 for Vault clusters. It is not a wrapper around Transit, KMS, HSM, or a
 Kubernetes Secret. The product has one canonical runtime mode: Vault uses the
 Watchdogs seal and key service.

@@ -6,13 +6,13 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: vault-watchdogs
+  name: helm-watchdogs
   namespace: vault-watchdogs
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: vault-watchdogs
+  name: helm-watchdogs
   namespace: vault
 rules:
 - apiGroups: [""]
@@ -25,21 +25,21 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: vault-watchdogs
+  name: helm-watchdogs
   namespace: vault
 subjects:
 - kind: ServiceAccount
-  name: vault-watchdogs
+  name: helm-watchdogs
   namespace: vault-watchdogs
 roleRef:
   kind: Role
-  name: vault-watchdogs
+  name: helm-watchdogs
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: vault-watchdogs-leader
+  name: helm-watchdogs-leader
   namespace: vault-watchdogs
 rules:
 - apiGroups: ["coordination.k8s.io"]
@@ -49,42 +49,42 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: vault-watchdogs-leader
+  name: helm-watchdogs-leader
   namespace: vault-watchdogs
 subjects:
 - kind: ServiceAccount
-  name: vault-watchdogs
+  name: helm-watchdogs
   namespace: vault-watchdogs
 roleRef:
   kind: Role
-  name: vault-watchdogs-leader
+  name: helm-watchdogs-leader
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vault-watchdogs
+  name: helm-watchdogs
   namespace: vault-watchdogs
   labels:
-    app.kubernetes.io/name: vault-watchdogs
+    app.kubernetes.io/name: helm-watchdogs
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app.kubernetes.io/name: vault-watchdogs
+      app.kubernetes.io/name: helm-watchdogs
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: vault-watchdogs
+        app.kubernetes.io/name: helm-watchdogs
     spec:
-      serviceAccountName: vault-watchdogs
+      serviceAccountName: helm-watchdogs
       securityContext:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
       containers:
       - name: watchdog
-        image: ghcr.io/nulldoot2k/vault-watchdogs/controller:0.1.0
+        image: ghcr.io/nulldoot2k/helm-watchdogs/controller:0.1.0
         imagePullPolicy: IfNotPresent
         env:
         - name: POD_NAME

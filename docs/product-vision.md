@@ -1,8 +1,8 @@
-# Vault Watchdogs product vision
+# Helm Watchdogs product vision
 
 ## Identity
 
-Vault Watchdogs is an independent infrastructure product authored and owned by
+Helm Watchdogs is an independent infrastructure product authored and owned by
 the project creator. It is a native key and seal platform for Vault, expanded
 with intelligent operational management.
 
@@ -46,7 +46,7 @@ must remain lightweight, deterministic, explainable, and safe around data.
 KMS / Transit
   -> key operations and cryptographic services
 
-Vault Watchdogs
+Helm Watchdogs
   -> key and seal operations
   -> continuous Vault understanding
   -> incident intelligence

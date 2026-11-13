@@ -1,6 +1,6 @@
-# Vault Watchdogs
+# Helm Watchdogs
 
-Vault Watchdogs is an independent key, seal, monitoring, and intelligent
+Helm Watchdogs is an independent key, seal, monitoring, and intelligent
 recovery platform for HashiCorp Vault.
 
 It works like a smart operations guardian: it watches Vault continuously,
@@ -24,7 +24,7 @@ running services and persistent data.
 
 ## Watchdogs compared with KMS and Transit
 
-| Capability | AWS KMS | Vault Transit | Vault Watchdogs |
+| Capability | AWS KMS | Vault Transit | Helm Watchdogs |
 | --- | --- | --- | --- |
 | Key management | Yes | Yes | Yes |
 | Cryptographic operations | Yes | Yes | Yes |
@@ -43,12 +43,12 @@ standalone and does not require AWS KMS, Transit, or HSM.
 ## Install with Helm
 
 ```bash
-helm repo add vault-watchdogs \
+helm repo add helm-watchdogs \
   https://nulldoot2k.github.io/helm-watchdogs
 helm repo update
 
-helm install vault-watchdogs \
-  vault-watchdogs/vault-watchdogs \
+helm install helm-watchdogs \
+  helm-watchdogs/helm-watchdogs \
   --namespace vault-watchdogs \
   --create-namespace
 ```
@@ -64,15 +64,15 @@ kubectl apply -f \
 
 ```bash
 helm repo update
-helm upgrade vault-watchdogs \
-  vault-watchdogs/vault-watchdogs \
+helm upgrade helm-watchdogs \
+  helm-watchdogs/helm-watchdogs \
   --namespace vault-watchdogs
 ```
 
 ## Uninstall
 
 ```bash
-helm uninstall vault-watchdogs \
+helm uninstall helm-watchdogs \
   --namespace vault-watchdogs
 ```
 
@@ -81,9 +81,12 @@ Vault data, Vault PVCs, or the Vault namespace.
 
 ## Project status
 
-Vault Watchdogs is under active development. Releases will be published only
+Helm Watchdogs is under active development. Releases will be published only
 after the key service, seal integration, recovery engine, migration workflows,
 and data-safety tests pass the release gate.
+
+Vault is the first supported integration. Future integrations will extend the
+same platform into broader monitoring, logging, and observability workflows.
 
 For architecture, security, migration, and installation details, see the
 [documentation](docs/).

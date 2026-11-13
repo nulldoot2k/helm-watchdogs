@@ -9,9 +9,9 @@ import urllib.request
 
 
 NS = os.getenv("WATCHDOG_NAMESPACE", "vault")
-LEASE_NS = os.getenv("LEASE_NAMESPACE", os.getenv("POD_NAMESPACE", "vault-watchdogs"))
+LEASE_NS = os.getenv("LEASE_NAMESPACE", os.getenv("POD_NAMESPACE", "helm-watchdogs"))
 POD_NAME = os.getenv("POD_NAME", "unknown")
-LEASE_NAME = os.getenv("LEASE_NAME", "vault-watchdogs-leader")
+LEASE_NAME = os.getenv("LEASE_NAME", "helm-watchdogs-leader")
 VAULT_SERVICE = os.getenv("VAULT_SERVICE", "vault-active")
 INTERVAL = int(os.getenv("WATCHDOG_INTERVAL_SECONDS", "10"))
 AUTO_UNSEAL = os.getenv("AUTO_UNSEAL", "true").lower() == "true"
@@ -20,7 +20,7 @@ MAX_REMEDIATIONS = int(os.getenv("MAX_REMEDIATIONS_PER_HOUR", "3"))
 
 
 def log(event, **fields):
-    print(json.dumps({"component": "vault-watchdogs", "event": event, **fields}, sort_keys=True), flush=True)
+    print(json.dumps({"component": "helm-watchdogs", "event": event, **fields}, sort_keys=True), flush=True)
 
 
 def request(url, method="GET", body=None, headers=None, context=None):

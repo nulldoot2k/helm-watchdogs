@@ -17,13 +17,13 @@ jobs:
         with:
           version: v3.17.3
       - name: Helm lint
-        run: helm lint charts/vault-watchdogs
+        run: helm lint charts/helm-watchdogs
       - name: Helm template
-        run: helm template vault-watchdogs charts/vault-watchdogs -n vault-watchdogs > /tmp/vault-watchdogs.yaml
+        run: helm template helm-watchdogs charts/helm-watchdogs -n vault-watchdogs > /tmp/helm-watchdogs.yaml
       - name: Validate rendered Kubernetes YAML
         uses: instrumenta/kubeval@master
         with:
-          files: /tmp/vault-watchdogs.yaml
+          files: /tmp/helm-watchdogs.yaml
       - name: Python syntax
         run: python3 -m py_compile src/watchdogs/controller/app.py
 
@@ -39,4 +39,4 @@ jobs:
         with:
           context: src/watchdogs/controller
           push: false
-          tags: vault-watchdogs/controller:ci
+          tags: helm-watchdogs/controller:ci
