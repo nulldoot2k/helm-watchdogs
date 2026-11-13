@@ -1,0 +1,14 @@
+image:
+  repository: vault-watchdogs
+  tag: dev
+  pullPolicy: IfNotPresent
+vault:
+  namespace: vault
+  service: vault-active
+watchdog:
+  replicas: 2
+  intervalSeconds: 10
+  autoUnseal: true
+  allowPodDelete: false
+  maxRemediationsPerHour: 3
+  secretName: vault-watchdogs-credentials

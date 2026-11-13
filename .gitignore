@@ -1,0 +1,19 @@
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+__pycache__/
+*.pyc
+
+# Local lab state
+.local/
+tmp/
+artifacts/
+.env
+*.env
+
+# Secrets and kubeconfig files
+*.kubeconfig
+*.secret.yaml
+*.secrets.yaml

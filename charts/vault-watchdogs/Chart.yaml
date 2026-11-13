@@ -1,0 +1,6 @@
+apiVersion: v2
+name: vault-watchdogs
+description: Safe Vault monitoring and Shamir auto-unseal watchdog
+type: application
+version: 0.1.0
+appVersion: 0.1.0

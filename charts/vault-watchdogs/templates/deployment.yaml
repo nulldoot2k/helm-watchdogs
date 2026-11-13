@@ -1,0 +1,114 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-watchdogs
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vault-watchdogs
+  namespace: {{ .Values.vault.namespace }}
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["statefulsets"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vault-watchdogs
+  namespace: {{ .Values.vault.namespace }}
+subjects:
+- kind: ServiceAccount
+  name: vault-watchdogs
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: vault-watchdogs
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vault-watchdogs-leader
+  namespace: {{ .Release.Namespace }}
+rules:
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["get", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vault-watchdogs-leader
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: vault-watchdogs
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: vault-watchdogs-leader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vault-watchdogs
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: vault-watchdogs
+spec:
+  replicas: {{ .Values.watchdog.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vault-watchdogs
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vault-watchdogs
+    spec:
+      serviceAccountName: vault-watchdogs
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: watchdog
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: LEASE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: WATCHDOG_NAMESPACE
+          value: {{ .Values.vault.namespace | quote }}
+        - name: VAULT_SERVICE
+          value: {{ .Values.vault.service | quote }}
+        - name: WATCHDOG_INTERVAL_SECONDS
+          value: {{ .Values.watchdog.intervalSeconds | quote }}
+        - name: AUTO_UNSEAL
+          value: {{ .Values.watchdog.autoUnseal | quote }}
+        - name: ALLOW_POD_DELETE
+          value: {{ .Values.watchdog.allowPodDelete | quote }}
+        - name: MAX_REMEDIATIONS_PER_HOUR
+          value: {{ .Values.watchdog.maxRemediationsPerHour | quote }}
+        envFrom:
+        - secretRef:
+            name: {{ .Values.watchdog.secretName }}
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
