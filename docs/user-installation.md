@@ -48,7 +48,7 @@ Each release publishes a rendered, versioned manifest:
 
 ```bash
 kubectl apply -f \
-  https://github.com/nulldoot2k/helm-watchdogs/releases/download/v0.1.0/install.yaml
+  https://raw.githubusercontent.com/nulldoot2k/helm-watchdogs/main/deploy/install.yaml
 ```
 
 The manifest creates Watchdogs resources only. It does not delete Vault pods,

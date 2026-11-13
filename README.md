@@ -57,7 +57,7 @@ helm install vault-watchdogs \
 
 ```bash
 kubectl apply -f \
-  https://github.com/nulldoot2k/helm-watchdogs/releases/latest/download/install.yaml
+  https://raw.githubusercontent.com/nulldoot2k/helm-watchdogs/main/deploy/install.yaml
 ```
 
 ## Upgrade

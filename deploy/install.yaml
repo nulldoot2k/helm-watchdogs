@@ -1,0 +1,116 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vault-watchdogs
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-watchdogs
+  namespace: vault-watchdogs
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vault-watchdogs
+  namespace: vault
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["statefulsets"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vault-watchdogs
+  namespace: vault
+subjects:
+- kind: ServiceAccount
+  name: vault-watchdogs
+  namespace: vault-watchdogs
+roleRef:
+  kind: Role
+  name: vault-watchdogs
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vault-watchdogs-leader
+  namespace: vault-watchdogs
+rules:
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["get", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vault-watchdogs-leader
+  namespace: vault-watchdogs
+subjects:
+- kind: ServiceAccount
+  name: vault-watchdogs
+  namespace: vault-watchdogs
+roleRef:
+  kind: Role
+  name: vault-watchdogs-leader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vault-watchdogs
+  namespace: vault-watchdogs
+  labels:
+    app.kubernetes.io/name: vault-watchdogs
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vault-watchdogs
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vault-watchdogs
+    spec:
+      serviceAccountName: vault-watchdogs
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: watchdog
+        image: ghcr.io/nulldoot2k/vault-watchdogs/controller:0.1.0
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: LEASE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: WATCHDOG_NAMESPACE
+          value: "vault"
+        - name: VAULT_SERVICE
+          value: "vault-active"
+        - name: WATCHDOG_INTERVAL_SECONDS
+          value: "10"
+        - name: AUTO_UNSEAL
+          value: "false"
+        - name: ALLOW_POD_DELETE
+          value: "false"
+        - name: MAX_REMEDIATIONS_PER_HOUR
+          value: "3"
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
