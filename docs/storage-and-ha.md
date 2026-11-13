@@ -16,10 +16,11 @@ Watchdogs stores operational state only:
 
 ## Recommended storage modes
 
-### Local lab
+### Development-only bootstrap
 
-Use Kubernetes Secrets only for the first Kind experiments. This mode is not a
-production key-management design.
+Use temporary Kubernetes Secrets only for isolated development validation. This
+is not a production key-management design and is not part of the product
+installation contract.
 
 ### Single-cluster deployment
 

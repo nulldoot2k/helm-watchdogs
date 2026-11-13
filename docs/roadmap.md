@@ -6,7 +6,7 @@
 - Two-replica controller
 - Leader election
 - Observe and assist modes
-- Kind failure lab
+- isolated Kubernetes failure testing
 
 ## Phase 1: standalone Watchdogs core
 

@@ -27,7 +27,7 @@ Do not push to a public registry or publish a community release yet.
 Private local development only:
 
 ```text
-source implementation -> Kind tests -> Helm apply -> failure tests
+source implementation -> isolated Kubernetes validation -> Helm apply -> failure tests
 ```
 
 Public publishing is a later release activity, not part of the current lab
