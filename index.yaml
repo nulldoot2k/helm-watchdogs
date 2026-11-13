@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  vault-watchdogs:
+  - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2026-11-13T14:09:47.943038421+07:00"
+    description: Vault Watchdogs monitoring and safe recovery controller
+    digest: 1a88d814a458cfb70d9126f6a56bbf1dc63f847c0b8f80d84ebb15ed18f57d71
+    name: vault-watchdogs
+    type: application
+    urls:
+    - https://nulldoot2k.github.io/helm-watchdogs/vault-watchdogs-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-11-13T14:09:47.942567474+07:00"
