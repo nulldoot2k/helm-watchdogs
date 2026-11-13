@@ -102,6 +102,8 @@ spec:
           value: {{ .Values.watchdog.allowPodDelete | quote }}
         - name: MAX_REMEDIATIONS_PER_HOUR
           value: {{ .Values.watchdog.maxRemediationsPerHour | quote }}
+        - name: METRICS_PORT
+          value: {{ .Values.metrics.port | quote }}
         {{- if .Values.watchdog.secretName }}
         envFrom:
         - secretRef:
@@ -114,3 +116,37 @@ spec:
           limits:
             cpu: 100m
             memory: 128Mi
+        ports:
+        - name: metrics
+          containerPort: {{ .Values.metrics.port }}
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: metrics
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: metrics
+          initialDelaySeconds: 3
+          periodSeconds: 5
+---
+{{- if .Values.metrics.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: helm-watchdogs-metrics
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: helm-watchdogs
+spec:
+  selector:
+    app.kubernetes.io/name: helm-watchdogs
+  ports:
+  - name: metrics
+    port: {{ .Values.metrics.port }}
+    targetPort: metrics
+    protocol: TCP
+{{- end }}

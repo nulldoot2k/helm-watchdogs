@@ -34,7 +34,24 @@
         "secretName": {"type": "string"}
       },
       "required": ["replicas", "intervalSeconds", "autoUnseal", "allowPodDelete", "maxRemediationsPerHour", "secretName"]
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "port": {"type": "integer", "minimum": 1, "maximum": 65535}
+      },
+      "required": ["enabled", "port"]
+    },
+    "ui": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {"type": "boolean"}
+      },
+      "required": ["enabled"]
     }
   },
-  "required": ["image", "vault", "watchdog"]
+  "required": ["image", "vault", "watchdog", "metrics", "ui"]
 }

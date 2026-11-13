@@ -26,6 +26,9 @@ jobs:
           files: /tmp/helm-watchdogs.yaml
       - name: Python syntax
         run: python3 -m py_compile src/watchdogs/controller/app.py
+      - name: Controller unit tests
+        working-directory: src/watchdogs/controller
+        run: python3 -m unittest -v test_app.py
 
   image:
     runs-on: ubuntu-latest

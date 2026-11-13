@@ -107,6 +107,8 @@ spec:
           value: "false"
         - name: MAX_REMEDIATIONS_PER_HOUR
           value: "3"
+        - name: METRICS_PORT
+          value: "8080"
         resources:
           requests:
             cpu: 10m
@@ -114,3 +116,35 @@ spec:
           limits:
             cpu: 100m
             memory: 128Mi
+        ports:
+        - name: metrics
+          containerPort: 8080
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: metrics
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: metrics
+          initialDelaySeconds: 3
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: helm-watchdogs-metrics
+  namespace: vault-watchdogs
+  labels:
+    app.kubernetes.io/name: helm-watchdogs
+spec:
+  selector:
+    app.kubernetes.io/name: helm-watchdogs
+  ports:
+  - name: metrics
+    port: 8080
+    targetPort: metrics
+    protocol: TCP

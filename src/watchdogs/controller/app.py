@@ -2,8 +2,10 @@
 import json
 import os
 import ssl
+import threading
 import time
 from datetime import datetime, timezone
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import urllib.error
 import urllib.request
 
@@ -14,9 +16,60 @@ POD_NAME = os.getenv("POD_NAME", "unknown")
 LEASE_NAME = os.getenv("LEASE_NAME", "helm-watchdogs-leader")
 VAULT_SERVICE = os.getenv("VAULT_SERVICE", "vault-active")
 INTERVAL = int(os.getenv("WATCHDOG_INTERVAL_SECONDS", "10"))
-AUTO_UNSEAL = os.getenv("AUTO_UNSEAL", "true").lower() == "true"
+AUTO_UNSEAL = os.getenv("AUTO_UNSEAL", "false").lower() == "true"
 ALLOW_POD_DELETE = os.getenv("ALLOW_POD_DELETE", "false").lower() == "true"
 MAX_REMEDIATIONS = int(os.getenv("MAX_REMEDIATIONS_PER_HOUR", "3"))
+METRICS_PORT = int(os.getenv("METRICS_PORT", "8080"))
+
+METRICS = {
+    "reconcile_total": 0,
+    "reconcile_failed_total": 0,
+    "vault_pods_observed": 0,
+    "vault_pods_sealed": 0,
+    "leadership_acquired_total": 0,
+}
+METRICS_LOCK = threading.Lock()
+
+
+def metric_inc(name, value=1):
+    with METRICS_LOCK:
+        METRICS[name] = METRICS.get(name, 0) + value
+
+
+class MetricsHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == "/healthz":
+            body = b"ok\n"
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+        elif self.path == "/metrics":
+            with METRICS_LOCK:
+                values = dict(METRICS)
+            lines = [
+                "# HELP watchdogs_info Helm Watchdogs controller information.",
+                "# TYPE watchdogs_info gauge",
+                'watchdogs_info{component="controller"} 1',
+            ]
+            for name, value in sorted(values.items()):
+                lines.append(f"watchdogs_{name} {value}")
+            body = ("\n".join(lines) + "\n").encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; version=0.0.4")
+        else:
+            body = b"not found\n"
+            self.send_response(404)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, _format, *_args):
+        return
+
+
+def start_metrics_server():
+    server = ThreadingHTTPServer(("0.0.0.0", METRICS_PORT), MetricsHandler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
 
 
 def log(event, **fields):
@@ -60,6 +113,7 @@ def leader_check():
             return False
         try:
             kube(f"/apis/coordination.k8s.io/v1/namespaces/{LEASE_NS}/leases", "POST", desired)
+            metric_inc("leadership_acquired_total")
             log("leadership_acquired", pod=POD_NAME)
             return True
         except Exception as create_exc:
@@ -85,6 +139,7 @@ def leader_check():
     try:
         kube(path, "PUT", desired)
         if holder != POD_NAME:
+            metric_inc("leadership_acquired_total")
             log("leadership_acquired", pod=POD_NAME)
         return True
     except Exception as update_exc:
@@ -115,6 +170,7 @@ def unseal(pod_ip, keys):
 
 
 def main():
+    start_metrics_server()
     keys = [os.getenv(f"VAULT_UNSEAL_KEY_{i}") for i in range(1, 4)]
     keys = [key for key in keys if key]
     if AUTO_UNSEAL and len(keys) < 3:
@@ -124,12 +180,14 @@ def main():
     log("started", namespace=NS, interval=INTERVAL, auto_unseal=AUTO_UNSEAL,
         allow_pod_delete=ALLOW_POD_DELETE)
     while True:
+        metric_inc("reconcile_total")
         try:
             if not leader_check():
                 time.sleep(INTERVAL)
                 continue
             pods = kube(f"/api/v1/namespaces/{NS}/pods?labelSelector=app.kubernetes.io/name=vault")
             ready = 0
+            metric_inc("vault_pods_observed", len(pods.get("items", [])))
             for pod in pods.get("items", []):
                 name = pod["metadata"]["name"]
                 phase = pod.get("status", {}).get("phase")
@@ -138,6 +196,7 @@ def main():
                     ready += 1
                     status = vault_status(ip)
                     if status.get("sealed") and AUTO_UNSEAL:
+                        metric_inc("vault_pods_sealed")
                         log("sealed_detected", pod=name)
                         status = unseal(ip, keys)
                         log("unseal_result", pod=name, sealed=status.get("sealed"), progress=status.get("progress"))
@@ -149,6 +208,7 @@ def main():
             if time.time() - window_started >= 3600:
                 remediation_count, window_started = 0, time.time()
         except Exception as exc:
+            metric_inc("reconcile_failed_total")
             log("reconcile_failed", error=str(exc))
         time.sleep(INTERVAL)
 

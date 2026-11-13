@@ -12,3 +12,8 @@ watchdog:
   allowPodDelete: false
   maxRemediationsPerHour: 3
   secretName: ""
+metrics:
+  enabled: true
+  port: 8080
+ui:
+  enabled: false
